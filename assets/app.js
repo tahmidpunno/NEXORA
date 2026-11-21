@@ -1,0 +1,41 @@
+const priceData={"diamonds": [[25, 29], [50, 47], [115, 100], [240, 193], [355, 290], [480, 383], [610, 479], [850, 675], [1240, 959], [2530, 1913], [5060, 3821], [10120, 7640]], "membership": [["Weekly Lite", 52], ["1x Weekly", 191], ["2x Weekly", 377], ["Monthly", 925]], "efootball": {"regular": [["100 Coin", 125, "Hot Sale"], ["300 Coin", 330, ""], ["500 Coin", 535, ""], ["1000 Coin", 1050, ""], ["2000 Coin", 2020, "Hot Sale"], ["3000 Coin", 2930, ""], ["5000 Coin", 4760, ""], ["10000 Coin", 9000, "Hot Sale"], ["15000 Coin", 13300, ""]], "event": [["500 Coin Pack (Event)", 375, ""], ["1500 Coin Pack (Event)", 1190, ""], ["4500 Coin Pack (Event)", 3190, ""]], "limited": [["Hamza Choudhury + 10 Coin", 125, "Limited Time"], ["Iker Casillas 100 Coin", 340, "Limited Time"], ["Luis Suarez", 135, "Limited Time"], ["Sócrates + 10 Coin", 125, "Limited Time"]]}};
+document.addEventListener('DOMContentLoaded',()=>{initFreeFire();initEfootball();initCheckout();});function copyNumber(number){if(navigator.clipboard){navigator.clipboard.writeText(number).then(()=>alert('নম্বর কপি হয়েছে!')).catch(()=>alert('নম্বর: '+number));}else alert('নম্বর: '+number);}
+document.addEventListener('DOMContentLoaded',()=>{
+ const menu=document.getElementById('mobileMenu'),nav=document.getElementById('navlinks');if(menu&&nav)menu.onclick=()=>nav.classList.toggle('open');
+ document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copyNumber(document.getElementById(b.dataset.copy).textContent));
+ document.querySelectorAll('[data-copy-text]').forEach(b=>b.onclick=()=>copyNumber(b.dataset.copyText));
+});
+let ffSelected=null,ffCategory='diamonds',ffPayment='bKash';
+function initFreeFire(){const box=document.getElementById('ffPackages');if(!box)return;const uid=document.getElementById('uid');uid.addEventListener('input',()=>{document.getElementById('uidSum').textContent=uid.value||'Not entered';});
+ document.querySelectorAll('[data-ffcat]').forEach(btn=>btn.onclick=()=>{ffCategory=btn.dataset.ffcat;document.querySelectorAll('[data-ffcat]').forEach(x=>x.classList.toggle('active',x===btn));ffSelected=null;renderFF();});
+ document.querySelectorAll('[data-payment]').forEach(btn=>btn.onclick=()=>{ffPayment=btn.dataset.payment;document.querySelectorAll('[data-payment]').forEach(x=>x.classList.toggle('active',x===btn));document.getElementById('paySum').textContent=ffPayment;document.getElementById('payLabel').textContent=ffPayment+' · Send Money';document.getElementById('payNumber').textContent=ffPayment==='bKash'?'01873918440':'01933025331';});
+ document.getElementById('ffCheckout').onclick=()=>{if(!uid.value.trim()||!ffSelected)return;localStorage.setItem('nexoraOrder',JSON.stringify({game:'Free Fire',uid:uid.value.trim(),package:ffSelected.name,price:ffSelected.price,payment:ffPayment}));location.href='checkout.html';};renderFF();}
+function renderFF(){const box=document.getElementById('ffPackages');if(!box||!priceData)return;const list=ffCategory==='diamonds'?priceData.diamonds.map(x=>({name:x[0]+' Diamonds',price:x[1]})):priceData.membership.map(x=>({name:x[0],price:x[1]}));box.innerHTML=list.map(x=>`<button class="package ${ffSelected&&ffSelected.name===x.name?'selected':''}" data-pack="${x.name}"><div class="pack-amount">💎 ${x.name}</div><div class="pack-price">৳${x.price}</div><div class="pack-note">${ffCategory==='diamonds'?'Diamond pack':'Membership'}</div></button>`).join('');box.querySelectorAll('[data-pack]').forEach(btn=>btn.onclick=()=>{ffSelected=list.find(x=>x.name===btn.dataset.pack);renderFF();document.getElementById('ffPackSum').textContent=ffSelected.name;document.getElementById('ffPriceSum').textContent='৳'+ffSelected.price;document.getElementById('ffCheckout').disabled=false;});}
+let efSelected=null,efCategory='regular';
+function initEfootball(){const box=document.getElementById('ePackages');if(!box)return;document.querySelectorAll('[data-efcat]').forEach(btn=>btn.onclick=()=>{efCategory=btn.dataset.efcat;efSelected=null;document.querySelectorAll('[data-efcat]').forEach(x=>x.classList.toggle('active',x===btn));renderEfootball();});document.getElementById('eContinue').onclick=()=>{if(!efSelected)return;const email=document.getElementById('konamiEmail').value.trim(),whatsapp=document.getElementById('eWhats').value.trim();if(!email||!whatsapp){alert('Email এবং WhatsApp নম্বর পূরণ করুন');return;}localStorage.setItem('nexoraOrder',JSON.stringify({game:'eFootball',package:efSelected.name,price:efSelected.price,email,whatsapp}));location.href='checkout.html';};renderEfootball();}
+function renderEfootball(){const box=document.getElementById('ePackages');if(!box||!priceData)return;const list=priceData.efootball[efCategory].map(x=>({name:x[0],price:x[1],note:x[2]}));box.innerHTML=list.map(x=>`<button class="package ${efSelected&&efSelected.name===x.name?'selected':''}" data-epack="${x.name}"><div class="pack-amount">${x.name}</div><div class="pack-price">৳${x.price.toLocaleString('en-US')}</div><div class="pack-note">${x.note||'প্যাকেজ নির্বাচন'}</div></button>`).join('');box.querySelectorAll('[data-epack]').forEach(btn=>btn.onclick=()=>{efSelected=list.find(x=>x.name===btn.dataset.epack);renderEfootball();document.getElementById('ePackSummary').textContent=efSelected.name;document.getElementById('ePriceSummary').textContent='৳'+efSelected.price.toLocaleString('en-US');document.getElementById('eContinue').disabled=false;});}
+function initCheckout(){
+ const sum=document.getElementById('orderSummary'); if(!sum)return;
+ const button=document.getElementById('sendOrder');
+ let order=null; try{order=JSON.parse(localStorage.getItem('nexoraOrder')||'null')}catch(e){order=null}
+ if(!order){sum.innerHTML='প্যাকেজ নির্বাচন করা হয়নি। <a href="freefire.html" style="color:var(--lime)">প্যাকেজ বেছে নিন</a>';if(button)button.disabled=true;return;}
+ sum.innerHTML=`<div class="summary-row"><span>Game</span><strong>${order.game||''}</strong></div>${order.uid?`<div class="summary-row"><span>Player UID</span><strong>${order.uid}</strong></div>`:''}${order.email?`<div class="summary-row"><span>KONAMI Email</span><strong>${order.email}</strong></div><div class="summary-row"><span>WhatsApp</span><strong>${order.whatsapp||''}</strong></div>`:''}<div class="summary-row"><span>Package</span><strong>${order.package||''}</strong></div><div class="summary-row summary-total"><span>Total</span><strong>৳${Number(order.price||0).toLocaleString('en-US')}</strong></div>`;
+ const pay=document.getElementById('checkoutPayment'),numbers=document.getElementById('paymentNumbers');
+ function updatePayment(){if(!pay||!numbers)return;const num=pay.value==='bKash'?'01873918440':'01933025331';numbers.innerHTML=`<div class="payment-card"><strong>${pay.value} · Send Money</strong><div class="copy-row"><span class="number">${num}</span><button class="copy-btn" id="checkoutCopy" type="button">Copy</button></div></div>`;const copyBtn=document.getElementById('checkoutCopy');if(copyBtn)copyBtn.onclick=()=>copyNumber(num);}
+ if(pay){pay.onchange=updatePayment;updatePayment();}
+ if(!button)return;
+ button.onclick=()=>{
+  const sender=(document.getElementById('senderNumber')?.value||'').trim(),trx=(document.getElementById('trxid')?.value||'').trim();
+  if(!sender||!trx){alert('Sender Number এবং TrxID পূরণ করুন');return;}
+  const lines=['🎮 NEXORA — নতুন অর্ডার','━━━━━━━━━━━━━━━━','Game: '+order.game];
+  if(order.uid)lines.push('Player UID: '+order.uid);
+  if(order.email)lines.push('KONAMI Email: '+order.email,'Customer WhatsApp: '+(order.whatsapp||''));
+  lines.push('Package: '+order.package,'Total: ৳'+Number(order.price||0).toLocaleString('en-US'),'Payment: '+(pay?.value||'N/A'),'Sender Number: '+sender,'Transaction ID: '+trx,'━━━━━━━━━━━━━━━━','পেমেন্ট যাচাই করে অর্ডার সম্পন্ন করুন।');
+  const waUrl='https://wa.me/8801873918440?text='+encodeURIComponent(lines.join('\n'));
+  // Navigate in the same tab: avoids popup blockers and endless loading indicators.
+  button.disabled=true;button.textContent='WhatsApp খোলা হচ্ছে…';
+  window.location.href=waUrl;
+  // If navigation is blocked/slow, restore the button shortly as a fallback.
+  setTimeout(()=>{button.disabled=false;button.textContent='Confirm & Send Order ↗';},2500);
+ };
+}
